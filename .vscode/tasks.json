@@ -2,6 +2,42 @@
 	"version": "2.0.0",
 	"tasks": [
 		{
+			"label": "build",
+			"command": "dotnet",
+			"type": "process",
+			"args": [
+				"build",
+				"${workspaceFolder}/special-succotash.csproj",
+				"/property:GenerateFullPaths=true",
+				"/consoleloggerparameters:NoSummary"
+			],
+			"problemMatcher": "$msCompile"
+		},
+		{
+			"label": "publish",
+			"command": "dotnet",
+			"type": "process",
+			"args": [
+				"publish",
+				"${workspaceFolder}/special-succotash.csproj",
+				"/property:GenerateFullPaths=true",
+				"/consoleloggerparameters:NoSummary"
+			],
+			"problemMatcher": "$msCompile"
+		},
+		{
+			"label": "watch",
+			"command": "dotnet",
+			"type": "process",
+			"args": [
+				"watch",
+				"run",
+				"--project",
+				"${workspaceFolder}/special-succotash.csproj"
+			],
+			"problemMatcher": "$msCompile"
+		},
+		{
 			"label": "clean (functions)",
 			"command": "dotnet",
 			"args": [
@@ -10,7 +46,10 @@
 				"/consoleloggerparameters:NoSummary"
 			],
 			"type": "process",
-			"problemMatcher": "$msCompile"
+			"problemMatcher": "$msCompile",
+			"options": {
+				"cwd": "${workspaceFolder}/src/functions"
+			}
 		},
 		{
 			"label": "build (functions)",
@@ -26,7 +65,10 @@
 				"kind": "build",
 				"isDefault": true
 			},
-			"problemMatcher": "$msCompile"
+			"problemMatcher": "$msCompile",
+			"options": {
+				"cwd": "${workspaceFolder}/src/functions"
+			}
 		},
 		{
 			"label": "clean release (functions)",
@@ -39,7 +81,10 @@
 				"/consoleloggerparameters:NoSummary"
 			],
 			"type": "process",
-			"problemMatcher": "$msCompile"
+			"problemMatcher": "$msCompile",
+			"options": {
+				"cwd": "${workspaceFolder}/src/functions"
+			}
 		},
 		{
 			"label": "publish (functions)",
@@ -53,53 +98,20 @@
 			],
 			"type": "process",
 			"dependsOn": "clean release (functions)",
-			"problemMatcher": "$msCompile"
+			"problemMatcher": "$msCompile",
+			"options": {
+				"cwd": "${workspaceFolder}/src/functions"
+			}
 		},
 		{
 			"type": "func",
 			"dependsOn": "build (functions)",
 			"options": {
-				"cwd": "${workspaceFolder}/bin/Debug/net6.0"
+				"cwd": "${workspaceFolder}/src/functions/bin/Debug/net6.0"
 			},
 			"command": "host start",
 			"isBackground": true,
 			"problemMatcher": "$func-dotnet-watch"
-        },
-        {
-            "label": "build",
-            "command": "dotnet",
-            "type": "process",
-            "args": [
-                "build",
-                "${workspaceFolder}/special-succotash.csproj",
-                "/property:GenerateFullPaths=true",
-                "/consoleloggerparameters:NoSummary"
-            ],
-            "problemMatcher": "$msCompile"
-        },
-        {
-            "label": "publish",
-            "command": "dotnet",
-            "type": "process",
-            "args": [
-                "publish",
-                "${workspaceFolder}/special-succotash.csproj",
-                "/property:GenerateFullPaths=true",
-                "/consoleloggerparameters:NoSummary"
-            ],
-            "problemMatcher": "$msCompile"
-        },
-        {
-            "label": "watch",
-            "command": "dotnet",
-            "type": "process",
-            "args": [
-                "watch",
-                "run",
-                "--project",
-                "${workspaceFolder}/special-succotash.csproj"
-            ],
-            "problemMatcher": "$msCompile"
-        }
+		}
 	]
 }
