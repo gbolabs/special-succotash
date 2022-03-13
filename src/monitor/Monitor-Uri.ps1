@@ -28,18 +28,19 @@ $endTime = [datetime]::Now.Add($durationTs)
 
 $succeeded = 0
 $failed = 0
-
+$statusCodes
 do {
     Write-Host -ForegroundColor Gray "Polls: $($succeeded+$failed) [$succeeded/$failed] - timeleft $($endTime-[datetime]::Now)"
     Write-Host -ForegroundColor Gray "Polling..."
     try {
-        $response = Invoke-WebRequest -Method GET -Uri $uri
+        $response = Invoke-WebRequest -Method GET -Uri $uri -TimeoutSec 1
         if ($response.StatusCode -ne $expectedStatusCode) {
             $failed++
         }
         else {
             $succeeded++
         }
+        $statusCodes.Add($response.StatusCode)
     }
     catch {
         $failed++
