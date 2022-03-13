@@ -1,0 +1,30 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "profiles_cdn_b2capimazfunc_dev_01_name": {
+            "value": null
+        },
+        "storageAccounts_stob2capmazfuncdev01_name": {
+            "value": null
+        },
+        "components_appi_b2capimazfunc_dev_01_name": {
+            "value": null
+        },
+        "service_apim_azlabs_b2capimazfunc_dev_01_name": {
+            "value": null
+        },
+        "workspaces_loga_b2capimazfunc_dev_01_name": {
+            "value": null
+        },
+        "actionGroups_Application_Insights_Smart_Detection_name": {
+            "value": null
+        },
+        "b2cDirectories_b2capimazfunc_onmicrosoft_com_name": {
+            "value": null
+        },
+        "smartdetectoralertrules_failure_anomalies___appi_b2capimazfunc_dev_01_name": {
+            "value": null
+        }
+    }
+}
