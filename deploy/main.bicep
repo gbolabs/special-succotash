@@ -18,7 +18,7 @@ resource sto 'Microsoft.Storage/storageAccounts@2021-08-01' = {
   }
   properties: {
     accessTier: 'Hot'
-    allowSharedKeyAccess: false
+    allowSharedKeyAccess: true
   }
 }
 
@@ -112,4 +112,16 @@ resource cdnEndpoint 'Microsoft.Cdn/profiles/endpoints@2021-06-01' = {
 
 /// end of cdn
 
+/// storage permissions
+var storageBlodContributor = 'ba92f5b4-2d11-453d-a403-e96b0029c9fe'
+resource gbo2storage 'Microsoft.Authorization/roleAssignments@2020-04-01-preview'={
+  name: guid('gbo2storage $storageBlodContributor')
+  properties:{
+    principalId: '1c66f21e-0648-43c1-8104-2be2d1c349dc' //gbo@pr114.isago.ch
+    roleDefinitionId: storageBlodContributor
+    principalType: 'User'
+  }
+}
+
 output cdnEndpoint string = cdnEndpoint.properties.hostName
+output webBlobId string = webBlob.id
