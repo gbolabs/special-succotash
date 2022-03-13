@@ -111,3 +111,5 @@ resource cdnEndpoint 'Microsoft.Cdn/profiles/endpoints@2021-06-01' = {
 }
 
 /// end of cdn
+
+output cdnEndpoint string = cdnEndpoint.properties.hostName
