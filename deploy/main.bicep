@@ -66,13 +66,13 @@ resource cdnEndpoint 'Microsoft.Cdn/profiles/endpoints@2021-06-01' = {
       {
         name: 'stob2capmazfuncdev01'
         properties: {
-          hostName: 'stob2capmazfuncdev01.z1.web.core.windows.net'
-          originHostHeader: 'stob2capmazfuncdev01.z1.web.core.windows.net'
+          hostName: 'stob2capmazfuncdev01.z1.web.${environment().suffixes.storage}'
+          originHostHeader: 'stob2capmazfuncdev01.z1.web.${environment().suffixes.storage}'
           enabled: true
         }
       }
     ]
-    originHostHeader: 'stob2capmazfuncdev01.z1.web.core.windows.net'
+    originHostHeader: 'stob2capmazfuncdev01.z1.web.${environment().suffixes.storage}'
     optimizationType: 'GeneralWebDelivery'
     queryStringCachingBehavior: 'IgnoreQueryString'
     isHttpAllowed: true
@@ -114,11 +114,11 @@ resource cdnEndpoint 'Microsoft.Cdn/profiles/endpoints@2021-06-01' = {
 
 /// storage permissions
 var storageBlodContributor = 'ba92f5b4-2d11-453d-a403-e96b0029c9fe'
-resource gbo2storage 'Microsoft.Authorization/roleAssignments@2020-04-01-preview'={
-  name: guid('gbo2storage $storageBlodContributor')
-  properties:{
+resource gbo2storage 'Microsoft.Authorization/roleAssignments@2020-04-01-preview' = {
+  name: '${guid('gbo2storage', sto.name, storageBlodContributor)}'
+  properties: {
     principalId: '1c66f21e-0648-43c1-8104-2be2d1c349dc' //gbo@pr114.isago.ch
-    roleDefinitionId: storageBlodContributor
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions',storageBlodContributor)
     principalType: 'User'
   }
 }

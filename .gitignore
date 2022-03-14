@@ -265,3 +265,5 @@ __pycache__/
 
 
 **/resources/*.jpg
+
+**/*.cred
