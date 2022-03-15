@@ -14,7 +14,7 @@ $durationTs = [timespan]::FromSeconds($durationInSeconds)
 $intervalInMSecs = $env:APP_MONITORINTERVAL
 if (-not $intervalInMSecs) {
     Write-Warning "Unable to read check interval, uses $([timespan]::FromMilliseconds(250)) as default."
-    $intervalInMSecs = 250
+    $intervalInMSecs = 50
 }
 
 $expectedStatusCode = $env:APP_MONITORSTATUSCODE
@@ -28,10 +28,11 @@ $endTime = [datetime]::Now.Add($durationTs)
 
 $succeeded = 0
 $failed = 0
-$statusCodes
+$statusCodes = [System.Collections.ArrayList]@()
 do {
-    Write-Host -ForegroundColor Gray "Polls: $($succeeded+$failed) [$succeeded/$failed] - timeleft $($endTime-[datetime]::Now)"
-    Write-Host -ForegroundColor Gray "Polling..."
+    if (($succeeded + $failed) % 10 -eq 0) {
+        Write-Host -ForegroundColor Gray "Progress: $($succeeded+$failed) [$succeeded/$failed] - timeleft $($endTime-[datetime]::Now)"
+    }
     try {
         $response = Invoke-WebRequest -Method GET -Uri $uri -TimeoutSec 1
         if ($response.StatusCode -ne $expectedStatusCode) {
@@ -40,14 +41,16 @@ do {
         else {
             $succeeded++
         }
-        $statusCodes.Add($response.StatusCode)
+        $statusCodes.Add($response.StatusCode) | Out-Null
     }
     catch {
+        Write-Error $_.Exception
         $failed++
     }
     Start-Sleep -Milliseconds $intervalInMSecs
 } while ([datetime]::Now -le $endTime)
 
-Write-Host -ForegroundColor DarkCyan "Summary: "
-Write-Host -ForegroundColor Green "    Succeeeded: $succeeded"
-Write-Host -ForegroundColor DarkRed "     Failed: $failed"
+Write-Host -ForegroundColor DarkCyan    "Summary: "
+Write-Host -ForegroundColor Green       "    Succeeeded: $succeeded"
+Write-Host -ForegroundColor DarkRed     "    Failed: $failed"
+$statusCodes | Group-Object | Select-Object count, name | Write-Host
