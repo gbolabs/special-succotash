@@ -29,6 +29,7 @@ $endTime = [datetime]::Now.Add($durationTs)
 $succeeded = 0
 $failed = 0
 $statusCodes = [System.Collections.ArrayList]@()
+$versions = [System.Collections.ArrayList]@()
 do {
     if (($succeeded + $failed) % 10 -eq 0) {
         Write-Host -ForegroundColor Gray "Progress: $($succeeded+$failed) [$succeeded/$failed] - timeleft $($endTime-[datetime]::Now)"
@@ -40,6 +41,7 @@ do {
         }
         else {
             $succeeded++
+            $versions.Add($response.Content) | Out-Null
         }
         $statusCodes.Add($response.StatusCode) | Out-Null
     }
@@ -54,3 +56,4 @@ Write-Host -ForegroundColor DarkCyan    "Summary: "
 Write-Host -ForegroundColor Green       "    Succeeeded: $succeeded"
 Write-Host -ForegroundColor DarkRed     "    Failed: $failed"
 $statusCodes | Group-Object | Select-Object count, name | Write-Host
+$versions | Group-Object | Select-Object count, name | Write-Host
