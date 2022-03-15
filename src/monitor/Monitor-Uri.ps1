@@ -35,7 +35,8 @@ do {
         Write-Host -ForegroundColor Gray "Progress: $($succeeded+$failed) [$succeeded/$failed] - timeleft $($endTime-[datetime]::Now)"
     }
     try {
-        $response = Invoke-WebRequest -Method GET -Uri $uri -TimeoutSec 1
+        $response = Invoke-WebRequest -Method GET -Uri $uri -TimeoutSec 1 -ErrorAction Continue
+        $statusCodes.Add($response.StatusCode) | Out-Null
         if ($response.StatusCode -ne $expectedStatusCode) {
             $failed++
         }
@@ -43,7 +44,6 @@ do {
             $succeeded++
             $versions.Add($response.Content) | Out-Null
         }
-        $statusCodes.Add($response.StatusCode) | Out-Null
     }
     catch {
         Write-Error $_.Exception
@@ -55,5 +55,5 @@ do {
 Write-Host -ForegroundColor DarkCyan    "Summary: "
 Write-Host -ForegroundColor Green       "    Succeeeded: $succeeded"
 Write-Host -ForegroundColor DarkRed     "    Failed: $failed"
-$statusCodes | Group-Object | Select-Object count, name | Write-Host
-$versions | Group-Object | Select-Object count, name | Write-Host
+$statusCodes | Group-Object | Select-Object count, name | Format-Table | Write-Host
+$versions | Group-Object | Select-Object count, name | Format-Table | Write-Host
