@@ -41,6 +41,65 @@ resource webBlob 'Microsoft.Storage/storageAccounts/blobServices/containers@2021
     publicAccess: 'None'
   }
 }
+
+resource managedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2018-11-30' = {
+  name: 'DeploymentScript'
+  location: location
+}
+resource contributorRoleDefinition 'Microsoft.Authorization/roleDefinitions@2018-01-01-preview' existing = {
+  scope: subscription()
+  // This is the Storage Account Contributor role, which is the minimum role permission we can give. See https://docs.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#:~:text=17d1049b-9a84-46fb-8f53-869881c3d3ab
+  name: '17d1049b-9a84-46fb-8f53-869881c3d3ab'
+}
+
+resource roleAssignment 'Microsoft.Authorization/roleAssignments@2020-04-01-preview' = {
+  scope: sto
+  name: guid(resourceGroup().id, managedIdentity.id, contributorRoleDefinition.id)
+  properties: {
+    roleDefinitionId: contributorRoleDefinition.id
+    principalId: managedIdentity.properties.principalId
+    principalType: 'ServicePrincipal'
+  }
+}
+
+resource deploymentScript 'Microsoft.Resources/deploymentScripts@2020-10-01' = {
+  name: 'deploymentScript'
+  location: location
+  kind: 'AzurePowerShell'
+  identity: {
+    type: 'UserAssigned'
+    userAssignedIdentities: {
+      '${managedIdentity.id}': {}
+    }
+  }
+  dependsOn: [
+    // we need to ensure we wait for the role assignment to be deployed before trying to access the storage account
+    roleAssignment
+  ]
+  properties: {
+    azPowerShellVersion: '3.0'
+    scriptContent: loadTextContent('./scripts/enable-staticwebsite.ps1')
+    retentionInterval: 'PT4H'
+    environmentVariables: [
+      {
+        name: 'ResourceGroupName'
+        value: resourceGroup().name
+      }
+      {
+        name: 'StorageAccountName'
+        value: sto.name
+      }
+      {
+        name: 'IndexDocumentPath'
+        value: 'index.html'
+      }
+    ]
+  }
+}
+
+output staticWebsiteUrl string = sto.properties.primaryEndpoints.web
+
+
 /// end storage
 
 /// CDN
@@ -112,13 +171,19 @@ resource cdnEndpoint 'Microsoft.Cdn/profiles/endpoints@2021-06-01' = {
 
 /// end of cdn
 
+
 /// storage permissions
 var storageBlodContributor = 'ba92f5b4-2d11-453d-a403-e96b0029c9fe'
+resource bloblContributorRoleDefiintion 'Microsoft.Authorization/roleDefinitions@2018-01-01-preview' existing={
+  scope: subscription()
+  name: storageBlodContributor
+}
+
 resource gbo2storage 'Microsoft.Authorization/roleAssignments@2020-04-01-preview' = {
   name: '${guid('gbo2storage', sto.name, storageBlodContributor)}'
   properties: {
     principalId: '1c66f21e-0648-43c1-8104-2be2d1c349dc' //gbo@pr114.isago.ch
-    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions',storageBlodContributor)
+    roleDefinitionId: bloblContributorRoleDefiintion.id
     principalType: 'User'
   }
 }
