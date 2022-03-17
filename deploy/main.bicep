@@ -42,8 +42,8 @@ resource webBlob 'Microsoft.Storage/storageAccounts/blobServices/containers@2021
   }
 }
 
-resource managedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2018-11-30' = {
-  name: 'DeploymentScript'
+resource deployScriptManagedId 'Microsoft.ManagedIdentity/userAssignedIdentities@2018-11-30' = {
+  name: 'id-b2capimazfunc-deployscript-dev-01'
   location: location
 }
 resource contributorRoleDefinition 'Microsoft.Authorization/roleDefinitions@2018-01-01-preview' existing = {
@@ -54,22 +54,22 @@ resource contributorRoleDefinition 'Microsoft.Authorization/roleDefinitions@2018
 
 resource roleAssignment 'Microsoft.Authorization/roleAssignments@2020-04-01-preview' = {
   scope: sto
-  name: guid(resourceGroup().id, managedIdentity.id, contributorRoleDefinition.id)
+  name: guid(resourceGroup().id, deployScriptManagedId.id, contributorRoleDefinition.id)
   properties: {
     roleDefinitionId: contributorRoleDefinition.id
-    principalId: managedIdentity.properties.principalId
+    principalId: deployScriptManagedId.properties.principalId
     principalType: 'ServicePrincipal'
   }
 }
 
 resource deploymentScript 'Microsoft.Resources/deploymentScripts@2020-10-01' = {
-  name: 'deploymentScript'
+  name: 'deployscript-enablestaticwebsite_on_storage-dev-01'
   location: location
   kind: 'AzurePowerShell'
   identity: {
     type: 'UserAssigned'
     userAssignedIdentities: {
-      '${managedIdentity.id}': {}
+      '${deployScriptManagedId.id}': {}
     }
   }
   dependsOn: [
@@ -97,9 +97,6 @@ resource deploymentScript 'Microsoft.Resources/deploymentScripts@2020-10-01' = {
   }
 }
 
-output staticWebsiteUrl string = sto.properties.primaryEndpoints.web
-
-
 /// end storage
 
 /// CDN
@@ -123,15 +120,15 @@ resource cdnEndpoint 'Microsoft.Cdn/profiles/endpoints@2021-06-01' = {
   properties: {
     origins: [
       {
-        name: 'stob2capmazfuncdev01'
+        name: sto.name
         properties: {
-          hostName: 'stob2capmazfuncdev01.z1.web.${environment().suffixes.storage}'
-          originHostHeader: 'stob2capmazfuncdev01.z1.web.${environment().suffixes.storage}'
+          hostName: sto.properties.primaryEndpoints.web
+          originHostHeader: sto.properties.primaryEndpoints.web
           enabled: true
         }
       }
     ]
-    originHostHeader: 'stob2capmazfuncdev01.z1.web.${environment().suffixes.storage}'
+    originHostHeader: sto.properties.primaryEndpoints.web
     optimizationType: 'GeneralWebDelivery'
     queryStringCachingBehavior: 'IgnoreQueryString'
     isHttpAllowed: true
@@ -171,10 +168,9 @@ resource cdnEndpoint 'Microsoft.Cdn/profiles/endpoints@2021-06-01' = {
 
 /// end of cdn
 
-
 /// storage permissions
 var storageBlodContributor = 'ba92f5b4-2d11-453d-a403-e96b0029c9fe'
-resource bloblContributorRoleDefiintion 'Microsoft.Authorization/roleDefinitions@2018-01-01-preview' existing={
+resource bloblContributorRoleDefiintion 'Microsoft.Authorization/roleDefinitions@2018-01-01-preview' existing = {
   scope: subscription()
   name: storageBlodContributor
 }
@@ -188,5 +184,7 @@ resource gbo2storage 'Microsoft.Authorization/roleAssignments@2020-04-01-preview
   }
 }
 
-output cdnEndpoint string = cdnEndpoint.properties.hostName
+output cdnEndpointHostname string = cdnEndpoint.properties.hostName
+output cdnEdnpointId string = cdnEndpoint.id
 output webBlobId string = webBlob.id
+output staticWebsiteUrl string = sto.properties.primaryEndpoints.web
