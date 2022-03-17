@@ -100,16 +100,19 @@ resource deploymentScript 'Microsoft.Resources/deploymentScripts@2020-10-01' = {
 /// end storage
 
 /// CDN
-resource cdn 'Microsoft.Cdn/profiles@2021-06-01' = {
+
+var storageAccountRegionalCodes = {
+  fakeLocation: 'z0'
+  westeurope: 'z6'
+  switzerlandnorth: 'z1'
+}
+var storageAccountStaticWebHostName = '${sto.name}.${storageAccountRegionalCodes[location]}.web.${environment().suffixes.storage}'
+
+resource cdn 'Microsoft.Cdn/profiles@2020-09-01' = {
   location: 'Global'
   name: 'cdn-b2capimazfunc-dev-01'
   sku: {
     name: 'Standard_Microsoft'
-  }
-  properties: {
-    identity: {
-      type: 'SystemAssigned'
-    }
   }
 }
 
@@ -122,19 +125,50 @@ resource cdnEndpoint 'Microsoft.Cdn/profiles/endpoints@2021-06-01' = {
       {
         name: sto.name
         properties: {
-          hostName: sto.properties.primaryEndpoints.web
-          originHostHeader: sto.properties.primaryEndpoints.web
+          hostName: storageAccountStaticWebHostName
+          originHostHeader: storageAccountStaticWebHostName
           enabled: true
         }
       }
     ]
-    originHostHeader: sto.properties.primaryEndpoints.web
+    originHostHeader: storageAccountStaticWebHostName
     optimizationType: 'GeneralWebDelivery'
     queryStringCachingBehavior: 'IgnoreQueryString'
     isHttpAllowed: true
     isHttpsAllowed: true
     deliveryPolicy: {
       rules: [
+        {
+          name:'Global'
+          order: 0
+          actions:[
+            {
+              name: 'CacheExpiration'
+              parameters: {
+                cacheBehavior: 'BypassCache'
+                cacheType: 'All'
+                typeName: 'DeliveryRuleCacheExpirationActionParameters'
+              }
+            }
+            {
+              name: 'ModifyResponseHeader'
+              parameters:{
+                typeName: 'DeliveryRuleHeaderActionParameters'
+                headerAction: 'Overwrite'
+                headerName: 'Cache-Control'
+                value:'no-cache'
+              }
+            }
+            {
+              name: 'ModifyResponseHeader'
+              parameters:{
+                typeName: 'DeliveryRuleHeaderActionParameters'
+                headerAction: 'Delete'
+                headerName: 'Server'
+              }
+            }
+          ]
+        }
         {
           name: 'http2https'
           actions: [
